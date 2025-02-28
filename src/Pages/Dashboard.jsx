@@ -107,6 +107,7 @@ export default function Dashboard() {
               <th className="p-3">Budget</th>
               <th className="p-3">Timeline</th>
               <th className="p-3">Description</th>
+              <th className="p-3">Submitted At</th> {/* New column for date and time */}
             </tr>
           </thead>
           <tbody>
@@ -120,11 +121,12 @@ export default function Dashboard() {
                   <td className="p-3">₹{submission.minBudget} - ₹{submission.maxBudget}</td>
                   <td className="p-3">{submission.timeline}</td>
                   <td className="p-3">{submission.description}</td>
+                  <td className="p-3">{new Date(submission.submittedAt).toLocaleString()}</td> {/* Displaying formatted date and time */}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="p-3 text-center">No data available</td>
+                <td colSpan="8" className="p-3 text-center">No data available</td>
               </tr>
             )}
           </tbody>
