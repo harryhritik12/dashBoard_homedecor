@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -16,6 +16,8 @@ import {
   TableRow,
   Snackbar,
   Alert,
+  Badge,
+  CssBaseline,
 } from "@mui/material";
 import { AuthContext } from "../AuthContext";
 
@@ -25,26 +27,30 @@ export default function Dashboard() {
   const [submissions, setSubmissions] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
-  const [newInquiries, setNewInquiries] = useState(false);
+  const [newInquiries, setNewInquiries] = useState([]);
   const [latestTimestamp, setLatestTimestamp] = useState(null);
 
-  // Function to fetch data from the API
   const fetchData = async () => {
     try {
-      const response = await fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts");
+      const response = await fetch(
+        "https://home-decor-backend-uh0c.onrender.com/api/contacts"
+      );
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
 
-      if (data.length === 0) return; // No data to process
+      if (data.length === 0) return;
 
-      // Assuming each submission has a 'submittedAt' field
       const fetchedLatestTimestamp = new Date(data[0].submittedAt).getTime();
 
       if (!latestTimestamp || fetchedLatestTimestamp > latestTimestamp) {
+        const newEntries = data.filter(
+          (item) =>
+            new Date(item.submittedAt).getTime() > (latestTimestamp || 0)
+        );
         setSubmissions(data);
         setFilteredData(data);
         setLatestTimestamp(fetchedLatestTimestamp);
-        setNewInquiries(true);
+        setNewInquiries(newEntries.map((item) => item.id));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -52,15 +58,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchData(); // Initial fetch
-    const interval = setInterval(fetchData, 5000); // Fetch every 5 seconds
-
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, [latestTimestamp]);
-
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-  };
 
   useEffect(() => {
     setFilteredData(
@@ -84,11 +85,12 @@ export default function Dashboard() {
   };
 
   const handleCloseSnackbar = () => {
-    setNewInquiries(false);
+    setNewInquiries([]);
   };
 
   return (
     <div>
+      <CssBaseline />
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -102,12 +104,16 @@ export default function Dashboard() {
 
       <Container sx={{ mt: 4 }}>
         <Snackbar
-          open={newInquiries}
+          open={newInquiries.length > 0}
           autoHideDuration={6000}
           onClose={handleCloseSnackbar}
         >
-          <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: '100%' }}>
-            New Inquiry Available!
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity="info"
+            sx={{ width: "100%" }}
+          >
+            {newInquiries.length} New Inquiry(ies) Available!
           </Alert>
         </Snackbar>
 
@@ -116,7 +122,7 @@ export default function Dashboard() {
           variant="outlined"
           fullWidth
           value={search}
-          onChange={handleSearchChange}
+          onChange={(e) => setSearch(e.target.value)}
           sx={{ mb: 4 }}
         />
 
@@ -133,12 +139,13 @@ export default function Dashboard() {
                   <TableCell>Timeline</TableCell>
                   <TableCell>Description</TableCell>
                   <TableCell>Submitted At</TableCell>
+                  <TableCell>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredData.length > 0 ? (
-                  filteredData.map((submission, index) => (
-                    <TableRow key={index}>
+                  filteredData.map((submission) => (
+                    <TableRow key={submission.id}>
                       <TableCell>{submission.firstName}</TableCell>
                       <TableCell>{submission.lastName}</TableCell>
                       <TableCell>{submission.email}</TableCell>
@@ -151,11 +158,20 @@ export default function Dashboard() {
                       <TableCell>
                         {new Date(submission.submittedAt).toLocaleString()}
                       </TableCell>
+                      <TableCell>
+                        {newInquiries.includes(submission.id) && (
+                          <Badge
+                            badgeContent="New"
+                            color="primary"
+                            sx={{ ml: 2 }}
+                          />
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       No data available
                     </TableCell>
                   </TableRow>
