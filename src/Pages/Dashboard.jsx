@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [filteredData, setFilteredData] = useState([]);
   const [newInquiries, setNewInquiries] = useState(false);
   const [latestTimestamp, setLatestTimestamp] = useState(null);
-  const [newRows, setNewRows] = useState(new Set()); // Track new rows
+  const [newRows, setNewRows] = useState(new Set());
 
   // Function to fetch data from the API
   const fetchData = useCallback(async () => {
@@ -26,15 +26,16 @@ export default function Dashboard() {
       if (!latestTimestamp || fetchedLatestTimestamp > latestTimestamp) {
         setNewInquiries(true);
 
-        // Store only new submissions for highlighting
+        // Store newly added submissions in a separate set
         const newSubmissions = data.filter((submission) => {
           return latestTimestamp && new Date(submission.submittedAt).getTime() > latestTimestamp;
         });
 
         setNewRows(new Set(newSubmissions.map((sub) => sub.id)));
 
-        setSubmissions(data);
-        setFilteredData(data);
+        // Don't update the full table until user clicks "Show New Inquiry"
+        setSubmissions((prev) => [...prev, ...newSubmissions]);
+        setFilteredData((prev) => [...prev, ...newSubmissions]);
         setLatestTimestamp(fetchedLatestTimestamp);
       }
     } catch (error) {
@@ -76,6 +77,11 @@ export default function Dashboard() {
   // Show new inquiries and remove the notification
   const handleShowNewInquiries = () => {
     setNewInquiries(false);
+
+    // Automatically remove "New" badges after 10 seconds
+    setTimeout(() => {
+      setNewRows(new Set());
+    }, 10000);
   };
 
   return (
@@ -128,7 +134,7 @@ export default function Dashboard() {
           <tbody>
             {filteredData.length > 0 ? (
               filteredData.map((submission) => (
-                <tr key={submission.id} className={`border-b transition ${newRows.has(submission.id) ? "bg-green-100 animate-pulse" : ""}`}>
+                <tr key={submission.id} className="border-b hover:bg-gray-100 transition">
                   <td className="p-4">{submission.firstName}</td>
                   <td className="p-4">{submission.lastName}</td>
                   <td className="p-4">{submission.email}</td>
@@ -141,7 +147,7 @@ export default function Dashboard() {
                   </td>
                   <td className="p-4">
                     {newRows.has(submission.id) && (
-                      <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs">
+                      <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs animate-pulse">
                         New
                       </span>
                     )}
