@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [filteredData, setFilteredData] = useState([]);
   const [newInquiries, setNewInquiries] = useState(false);
   const [latestTimestamp, setLatestTimestamp] = useState(null);
-  const [displayedSubmissionIds, setDisplayedSubmissionIds] = useState(new Set());
+  const [newRows, setNewRows] = useState(new Set()); // Track new rows
 
   // Function to fetch data from the API
   const fetchData = useCallback(async () => {
@@ -24,14 +24,18 @@ export default function Dashboard() {
       const fetchedLatestTimestamp = new Date(data[0].submittedAt).getTime();
 
       if (!latestTimestamp || fetchedLatestTimestamp > latestTimestamp) {
+        setNewInquiries(true);
+
+        // Store only new submissions for highlighting
+        const newSubmissions = data.filter((submission) => {
+          return latestTimestamp && new Date(submission.submittedAt).getTime() > latestTimestamp;
+        });
+
+        setNewRows(new Set(newSubmissions.map((sub) => sub.id)));
+
         setSubmissions(data);
         setFilteredData(data);
         setLatestTimestamp(fetchedLatestTimestamp);
-        setNewInquiries(true);
-
-        // Store new submission IDs
-        const newSubmissionIds = new Set(data.map((submission) => submission.id));
-        setDisplayedSubmissionIds(newSubmissionIds);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -69,6 +73,11 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  // Show new inquiries and remove the notification
+  const handleShowNewInquiries = () => {
+    setNewInquiries(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       {/* Header */}
@@ -83,8 +92,8 @@ export default function Dashboard() {
       {newInquiries && (
         <div className="mb-4 bg-blue-500 text-white p-3 rounded-lg shadow-md flex justify-between items-center">
           <span className="font-semibold">🔔 New Inquiry Available!</span>
-          <button onClick={() => setNewInquiries(false)} className="bg-white text-blue-500 px-3 py-1 rounded-lg shadow-sm hover:bg-blue-100 transition">
-            Dismiss
+          <button onClick={handleShowNewInquiries} className="bg-white text-blue-500 px-3 py-1 rounded-lg shadow-sm hover:bg-blue-100 transition">
+            Show New Inquiry
           </button>
         </div>
       )}
@@ -119,7 +128,7 @@ export default function Dashboard() {
           <tbody>
             {filteredData.length > 0 ? (
               filteredData.map((submission) => (
-                <tr key={submission.id} className="border-b hover:bg-gray-100 transition">
+                <tr key={submission.id} className={`border-b transition ${newRows.has(submission.id) ? "bg-green-100 animate-pulse" : ""}`}>
                   <td className="p-4">{submission.firstName}</td>
                   <td className="p-4">{submission.lastName}</td>
                   <td className="p-4">{submission.email}</td>
@@ -131,8 +140,8 @@ export default function Dashboard() {
                     {new Date(submission.submittedAt).toLocaleString()}
                   </td>
                   <td className="p-4">
-                    {!displayedSubmissionIds.has(submission.id) && (
-                      <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs animate-pulse">
+                    {newRows.has(submission.id) && (
+                      <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs">
                         New
                       </span>
                     )}
