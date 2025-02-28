@@ -26,7 +26,11 @@ export default function Dashboard() {
           item.firstName.toLowerCase().includes(search.toLowerCase()) ||
           item.lastName.toLowerCase().includes(search.toLowerCase()) ||
           item.email.toLowerCase().includes(search.toLowerCase()) ||
-          item.service.toLowerCase().includes(search.toLowerCase())
+          item.service.toLowerCase().includes(search.toLowerCase())||
+          item.minBudget.toString().includes(search.toLowerCase()) ||
+          item.maxBudget.toString().includes(search.toLowerCase()) ||
+          item.timeline.toLowerCase().includes(search.toLowerCase())||
+          item.description.toLowerCase().includes(search.toLowerCase())
       )
     );
   }, [search, submissions]);
@@ -64,6 +68,7 @@ export default function Dashboard() {
               <th className="p-3">Service</th>
               <th className="p-3">Budget</th>
               <th className="p-3">Timeline</th>
+              <th className="p-3">Description</th>
             </tr>
           </thead>
           <tbody>
@@ -76,6 +81,8 @@ export default function Dashboard() {
                   <td className="p-3">{submission.service}</td>
                   <td className="p-3">${submission.minBudget} - ${submission.maxBudget}</td>
                   <td className="p-3">{submission.timeline}</td>
+                  <td className="p-3">{submission.description}</td>
+                  
                 </tr>
               ))
             ) : (
