@@ -20,8 +20,8 @@ export default function Dashboard() {
 
       if (data.length === 0) return; // No data to process
 
-      // Assuming each submission has a 'timestamp' field
-      const fetchedLatestTimestamp = new Date(data[data.length - 1].timestamp).getTime();
+      // Assuming each submission has a 'submittedAt' field
+      const fetchedLatestTimestamp = new Date(data[0].submittedAt).getTime();
 
       if (!latestTimestamp || fetchedLatestTimestamp > latestTimestamp) {
         setSubmissions(data);
