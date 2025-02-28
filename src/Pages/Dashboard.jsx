@@ -8,16 +8,40 @@ export default function Dashboard() {
   const [submissions, setSubmissions] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [newInquiries, setNewInquiries] = useState(false);
+  const [latestData, setLatestData] = useState([]);
 
-  useEffect(() => {
+  // Function to fetch latest data
+  const fetchData = () => {
     fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts")
       .then((res) => res.json())
       .then((data) => {
-        setSubmissions(data); // Since API returns an array directly
-        setFilteredData(data);
+        // Check if new inquiries are available
+        if (data.length > submissions.length) {
+          setNewInquiries(true);  // Show new inquiry notification
+          setLatestData(data);    // Store latest data separately
+        } else {
+          setSubmissions(data);
+          setFilteredData(data);
+        }
       })
       .catch((err) => console.error("Error fetching data:", err));
+  };
+
+  // Fetch data initially and every 5 seconds
+  useEffect(() => {
+    fetchData(); // Initial fetch
+    const interval = setInterval(fetchData, 5000); // Fetch every 5 seconds
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
+
+  // Function to update the table with new inquiries
+  const updateWithNewInquiries = () => {
+    setSubmissions(latestData);
+    setFilteredData(latestData);
+    setNewInquiries(false);
+  };
 
   useEffect(() => {
     setFilteredData(
@@ -30,7 +54,7 @@ export default function Dashboard() {
           item.minBudget.toString().includes(search.toLowerCase()) ||
           item.maxBudget.toString().includes(search.toLowerCase()) ||
           item.timeline.toLowerCase().includes(search.toLowerCase()) ||
-          item.description.toLowerCase().includes(search.toLowerCase()) // Added description search
+          item.description.toLowerCase().includes(search.toLowerCase())
       )
     );
   }, [search, submissions]);
@@ -49,6 +73,19 @@ export default function Dashboard() {
           Logout
         </button>
       </div>
+
+      {/* Show new inquiry notification if new data is available */}
+      {newInquiries && (
+        <div className="mb-4 bg-blue-500 text-white p-3 rounded flex justify-between">
+          <span>🔔 New Inquiry Available!</span>
+          <button
+            onClick={updateWithNewInquiries}
+            className="bg-white text-blue-500 px-3 py-1 rounded"
+          >
+            Show New Inquiry
+          </button>
+        </div>
+      )}
 
       <input
         type="text"
@@ -81,12 +118,12 @@ export default function Dashboard() {
                   <td className="p-3">{submission.service}</td>
                   <td className="p-3">${submission.minBudget} - ${submission.maxBudget}</td>
                   <td className="p-3">{submission.timeline}</td>
-                  <td className="p-3">{submission.description}</td> {/* Display description */}
+                  <td className="p-3">{submission.description}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="p-3 text-center">No data available</td> {/* Fixed colSpan */}
+                <td colSpan="7" className="p-3 text-center">No data available</td>
               </tr>
             )}
           </tbody>
