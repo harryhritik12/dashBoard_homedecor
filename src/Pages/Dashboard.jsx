@@ -9,43 +9,39 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [newInquiries, setNewInquiries] = useState(false);
-  const [latestData, setLatestData] = useState([]);
+  const [latestTimestamp, setLatestTimestamp] = useState(null);
 
-  // Function to fetch latest data
+  // Function to fetch data from the API
   const fetchData = async () => {
     try {
       const response = await fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts");
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
 
-      // Check if there is a new inquiry by comparing the last entry
-      if (
-        data.length > submissions.length && // New entry exists
-        JSON.stringify(data[data.length - 1]) !== JSON.stringify(submissions[submissions.length - 1]) // Last inquiry is different
-      ) {
-        setNewInquiries(true);
-        setLatestData(data);
-      } else {
+      if (data.length === 0) return; // No data to process
+
+      // Assuming each submission has a 'timestamp' field
+      const fetchedLatestTimestamp = new Date(data[data.length - 1].timestamp).getTime();
+
+      if (!latestTimestamp || fetchedLatestTimestamp > latestTimestamp) {
         setSubmissions(data);
         setFilteredData(data);
+        setLatestTimestamp(fetchedLatestTimestamp);
+        setNewInquiries(true);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
-  // Fetch data initially and every 5 seconds
   useEffect(() => {
     fetchData(); // Initial fetch
     const interval = setInterval(fetchData, 5000); // Fetch every 5 seconds
 
     return () => clearInterval(interval); // Cleanup interval on unmount
-  }, []);
+  }, [latestTimestamp]);
 
-  // Function to update the table with new inquiries
   const updateWithNewInquiries = () => {
-    setSubmissions(latestData);
-    setFilteredData(latestData);
     setNewInquiries(false);
   };
 
@@ -70,8 +66,7 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Employee Dashboard</h2>
         <button
-          onClick={(e) => {
-            e.preventDefault(); // Prevent unwanted page reload
+          onClick={() => {
             logout();
             navigate("/login");
           }}
@@ -81,15 +76,11 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Show new inquiry notification if new data is available */}
       {newInquiries && (
         <div className="mb-4 bg-blue-500 text-white p-3 rounded flex justify-between">
           <span>🔔 New Inquiry Available!</span>
           <button
-            onClick={(e) => {
-              e.preventDefault(); // Prevent full page reload
-              updateWithNewInquiries();
-            }}
+            onClick={updateWithNewInquiries}
             className="bg-white text-blue-500 px-3 py-1 rounded"
           >
             Show New Inquiry
