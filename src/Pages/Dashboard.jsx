@@ -18,8 +18,11 @@ export default function Dashboard() {
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
 
-      // Check if new inquiries exist
-      if (data.length > submissions.length) {
+      // Check if there is a new inquiry by comparing the last entry
+      if (
+        data.length > submissions.length && // New entry exists
+        JSON.stringify(data[data.length - 1]) !== JSON.stringify(submissions[submissions.length - 1]) // Last inquiry is different
+      ) {
         setNewInquiries(true);
         setLatestData(data);
       } else {
