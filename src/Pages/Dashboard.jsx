@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
-    fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts")
+    fetch("https://home-decor-backend-uh0c.onrender.com/api/contact")
       .then((res) => res.json())
       .then((data) => {
         setSubmissions(data.contacts);
