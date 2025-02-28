@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [filteredData, setFilteredData] = useState([]);
   const [newInquiries, setNewInquiries] = useState(false);
   const [latestTimestamp, setLatestTimestamp] = useState(null);
+  const [newSubmissionIds, setNewSubmissionIds] = useState(new Set());
 
   // Function to fetch data from the API
   const fetchData = async () => {
@@ -18,15 +19,20 @@ export default function Dashboard() {
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
 
-      if (data.length === 0) return; // No data to process
+      if (data.length === 0) return;
 
-      // Assuming each submission has a 'submittedAt' field
       const fetchedLatestTimestamp = new Date(data[0].submittedAt).getTime();
-
       if (!latestTimestamp || fetchedLatestTimestamp > latestTimestamp) {
         setSubmissions(data);
         setFilteredData(data);
         setLatestTimestamp(fetchedLatestTimestamp);
+
+        // Identify new inquiries
+        const newIds = new Set(
+          data.filter(sub => new Date(sub.submittedAt).getTime() > latestTimestamp).map(sub => sub.id)
+        );
+        setNewSubmissionIds(newIds);
+
         setNewInquiries(true);
       }
     } catch (error) {
@@ -35,14 +41,14 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchData(); // Initial fetch
-    const interval = setInterval(fetchData, 5000); // Fetch every 5 seconds
-
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, [latestTimestamp]);
 
   const updateWithNewInquiries = () => {
     setNewInquiries(false);
+    setNewSubmissionIds(new Set()); // Clear the blinking effect
   };
 
   useEffect(() => {
@@ -107,13 +113,18 @@ export default function Dashboard() {
               <th className="p-3">Budget</th>
               <th className="p-3">Timeline</th>
               <th className="p-3">Description</th>
-              <th className="p-3">Submitted At</th> {/* New column for date and time */}
+              <th className="p-3">Submitted At</th>
             </tr>
           </thead>
           <tbody>
             {filteredData.length > 0 ? (
-              filteredData.map((submission, index) => (
-                <tr key={index} className="border-b">
+              filteredData.map((submission) => (
+                <tr
+                  key={submission.id}
+                  className={`border-b ${
+                    newSubmissionIds.has(submission.id) ? "animate-blink" : ""
+                  }`}
+                >
                   <td className="p-3">{submission.firstName}</td>
                   <td className="p-3">{submission.lastName}</td>
                   <td className="p-3">{submission.email}</td>
@@ -121,7 +132,7 @@ export default function Dashboard() {
                   <td className="p-3">₹{submission.minBudget} - ₹{submission.maxBudget}</td>
                   <td className="p-3">{submission.timeline}</td>
                   <td className="p-3">{submission.description}</td>
-                  <td className="p-3">{new Date(submission.submittedAt).toLocaleString()}</td> {/* Displaying formatted date and time */}
+                  <td className="p-3">{new Date(submission.submittedAt).toLocaleString()}</td>
                 </tr>
               ))
             ) : (
