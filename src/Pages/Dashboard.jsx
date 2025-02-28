@@ -1,24 +1,5 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Container,
-  TextField,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Snackbar,
-  Alert,
-  Badge,
-  CssBaseline,
-} from "@mui/material";
 import { AuthContext } from "../AuthContext";
 
 export default function Dashboard() {
@@ -27,30 +8,26 @@ export default function Dashboard() {
   const [submissions, setSubmissions] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
-  const [newInquiries, setNewInquiries] = useState([]);
+  const [newInquiries, setNewInquiries] = useState(false);
   const [latestTimestamp, setLatestTimestamp] = useState(null);
 
+  // Function to fetch data from the API
   const fetchData = async () => {
     try {
-      const response = await fetch(
-        "https://home-decor-backend-uh0c.onrender.com/api/contacts"
-      );
+      const response = await fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts");
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
 
-      if (data.length === 0) return;
+      if (data.length === 0) return; // No data to process
 
+      // Assuming each submission has a 'submittedAt' field
       const fetchedLatestTimestamp = new Date(data[0].submittedAt).getTime();
 
       if (!latestTimestamp || fetchedLatestTimestamp > latestTimestamp) {
-        const newEntries = data.filter(
-          (item) =>
-            new Date(item.submittedAt).getTime() > (latestTimestamp || 0)
-        );
         setSubmissions(data);
         setFilteredData(data);
         setLatestTimestamp(fetchedLatestTimestamp);
-        setNewInquiries(newEntries.map((item) => item.id));
+        setNewInquiries(true);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -58,10 +35,15 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
+    fetchData(); // Initial fetch
+    const interval = setInterval(fetchData, 5000); // Fetch every 5 seconds
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, [latestTimestamp]);
+
+  const updateWithNewInquiries = () => {
+    setNewInquiries(false);
+  };
 
   useEffect(() => {
     setFilteredData(
@@ -79,108 +61,77 @@ export default function Dashboard() {
     );
   }, [search, submissions]);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const handleCloseSnackbar = () => {
-    setNewInquiries([]);
-  };
-
   return (
-    <div>
-      <CssBaseline />
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Employee Dashboard
-          </Typography>
-          <Button color="inherit" onClick={handleLogout}>
-            Logout
-          </Button>
-        </Toolbar>
-      </AppBar>
-
-      <Container sx={{ mt: 4 }}>
-        <Snackbar
-          open={newInquiries.length > 0}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold">Employee Dashboard</h2>
+        <button
+          onClick={() => {
+            logout();
+            navigate("/login");
+          }}
+          className="bg-red-500 text-white px-4 py-2 rounded"
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity="info"
-            sx={{ width: "100%" }}
+          Logout
+        </button>
+      </div>
+
+      {newInquiries && (
+        <div className="mb-4 bg-blue-500 text-white p-3 rounded flex justify-between">
+          <span>🔔 New Inquiry Available!</span>
+          <button
+            onClick={updateWithNewInquiries}
+            className="bg-white text-blue-500 px-3 py-1 rounded"
           >
-            {newInquiries.length} New Inquiry(ies) Available!
-          </Alert>
-        </Snackbar>
+            Show New Inquiry
+          </button>
+        </div>
+      )}
 
-        <TextField
-          label="Search by name, email, or service..."
-          variant="outlined"
-          fullWidth
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ mb: 4 }}
-        />
+      <input
+        type="text"
+        placeholder="Search by name, email, or service..."
+        className="w-full p-2 mb-4 border border-gray-300 rounded"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-        <Paper>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>First Name</TableCell>
-                  <TableCell>Last Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Service</TableCell>
-                  <TableCell>Budget</TableCell>
-                  <TableCell>Timeline</TableCell>
-                  <TableCell>Description</TableCell>
-                  <TableCell>Submitted At</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredData.length > 0 ? (
-                  filteredData.map((submission) => (
-                    <TableRow key={submission.id}>
-                      <TableCell>{submission.firstName}</TableCell>
-                      <TableCell>{submission.lastName}</TableCell>
-                      <TableCell>{submission.email}</TableCell>
-                      <TableCell>{submission.service}</TableCell>
-                      <TableCell>
-                        ₹{submission.minBudget} - ₹{submission.maxBudget}
-                      </TableCell>
-                      <TableCell>{submission.timeline}</TableCell>
-                      <TableCell>{submission.description}</TableCell>
-                      <TableCell>
-                        {new Date(submission.submittedAt).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {newInquiries.includes(submission.id) && (
-                          <Badge
-                            badgeContent="New"
-                            color="primary"
-                            sx={{ ml: 2 }}
-                          />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={9} align="center">
-                      No data available
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      </Container>
+      <div className="overflow-auto bg-white shadow-md rounded-lg">
+        <table className="w-full text-left">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="p-3">First Name</th>
+              <th className="p-3">Last Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Service</th>
+              <th className="p-3">Budget</th>
+              <th className="p-3">Timeline</th>
+              <th className="p-3">Description</th>
+              <th className="p-3">Submitted At</th> {/* New column for date and time */}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.length > 0 ? (
+              filteredData.map((submission, index) => (
+                <tr key={index} className="border-b">
+                  <td className="p-3">{submission.firstName}</td>
+                  <td className="p-3">{submission.lastName}</td>
+                  <td className="p-3">{submission.email}</td>
+                  <td className="p-3">{submission.service}</td>
+                  <td className="p-3">₹{submission.minBudget} - ₹{submission.maxBudget}</td>
+                  <td className="p-3">{submission.timeline}</td>
+                  <td className="p-3">{submission.description}</td>
+                  <td className="p-3">{new Date(submission.submittedAt).toLocaleString()}</td> {/* Displaying formatted date and time */}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="p-3 text-center">No data available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
