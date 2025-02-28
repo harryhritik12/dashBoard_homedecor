@@ -13,12 +13,8 @@ export default function Dashboard() {
     fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts")
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.contacts) {
-          setSubmissions(data.contacts);
-          setFilteredData(data.contacts);
-        } else {
-          console.error("Unexpected API response:", data);
-        }
+        setSubmissions(data); // Since API returns an array directly
+        setFilteredData(data);
       })
       .catch((err) => console.error("Error fetching data:", err));
   }, []);
@@ -78,17 +74,13 @@ export default function Dashboard() {
                   <td className="p-3">{submission.lastName}</td>
                   <td className="p-3">{submission.email}</td>
                   <td className="p-3">{submission.service}</td>
-                  <td className="p-3">
-                    ${submission.minBudget} - ${submission.maxBudget}
-                  </td>
+                  <td className="p-3">${submission.minBudget} - ${submission.maxBudget}</td>
                   <td className="p-3">{submission.timeline}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td className="p-3" colSpan="6">
-                  No data available
-                </td>
+                <td colSpan="6" className="p-3 text-center">No data available</td>
               </tr>
             )}
           </tbody>
