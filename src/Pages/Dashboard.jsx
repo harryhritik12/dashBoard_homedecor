@@ -10,11 +10,15 @@ export default function Dashboard() {
   const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
-    fetch("https://home-decor-backend-uh0c.onrender.com/api/contact")
+    fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts")
       .then((res) => res.json())
       .then((data) => {
-        setSubmissions(data.contacts);
-        setFilteredData(data.contacts);
+        if (data && data.contacts) {
+          setSubmissions(data.contacts);
+          setFilteredData(data.contacts);
+        } else {
+          console.error("Unexpected API response:", data);
+        }
       })
       .catch((err) => console.error("Error fetching data:", err));
   }, []);
@@ -67,16 +71,26 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((submission, index) => (
-              <tr key={index} className="border-b">
-                <td className="p-3">{submission.firstName}</td>
-                <td className="p-3">{submission.lastName}</td>
-                <td className="p-3">{submission.email}</td>
-                <td className="p-3">{submission.service}</td>
-                <td className="p-3">${submission.minBudget} - ${submission.maxBudget}</td>
-                <td className="p-3">{submission.timeline}</td>
+            {filteredData.length > 0 ? (
+              filteredData.map((submission, index) => (
+                <tr key={index} className="border-b">
+                  <td className="p-3">{submission.firstName}</td>
+                  <td className="p-3">{submission.lastName}</td>
+                  <td className="p-3">{submission.email}</td>
+                  <td className="p-3">{submission.service}</td>
+                  <td className="p-3">
+                    ${submission.minBudget} - ${submission.maxBudget}
+                  </td>
+                  <td className="p-3">{submission.timeline}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td className="p-3" colSpan="6">
+                  No data available
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
