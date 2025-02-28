@@ -26,11 +26,11 @@ export default function Dashboard() {
           item.firstName.toLowerCase().includes(search.toLowerCase()) ||
           item.lastName.toLowerCase().includes(search.toLowerCase()) ||
           item.email.toLowerCase().includes(search.toLowerCase()) ||
-          item.service.toLowerCase().includes(search.toLowerCase())||
+          item.service.toLowerCase().includes(search.toLowerCase()) ||
           item.minBudget.toString().includes(search.toLowerCase()) ||
           item.maxBudget.toString().includes(search.toLowerCase()) ||
-          item.timeline.toLowerCase().includes(search.toLowerCase())||
-          item.description.toLowerCase().includes(search.toLowerCase())
+          item.timeline.toLowerCase().includes(search.toLowerCase()) ||
+          item.description.toLowerCase().includes(search.toLowerCase()) // Added description search
       )
     );
   }, [search, submissions]);
@@ -81,13 +81,12 @@ export default function Dashboard() {
                   <td className="p-3">{submission.service}</td>
                   <td className="p-3">${submission.minBudget} - ${submission.maxBudget}</td>
                   <td className="p-3">{submission.timeline}</td>
-                  <td className="p-3">{submission.description}</td>
-                  
+                  <td className="p-3">{submission.description}</td> {/* Display description */}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="p-3 text-center">No data available</td>
+                <td colSpan="7" className="p-3 text-center">No data available</td> {/* Fixed colSpan */}
               </tr>
             )}
           </tbody>
