@@ -12,20 +12,23 @@ export default function Dashboard() {
   const [latestData, setLatestData] = useState([]);
 
   // Function to fetch latest data
-  const fetchData = () => {
-    fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts")
-      .then((res) => res.json())
-      .then((data) => {
-        // Check if new inquiries are available
-        if (data.length > submissions.length) {
-          setNewInquiries(true);  // Show new inquiry notification
-          setLatestData(data);    // Store latest data separately
-        } else {
-          setSubmissions(data);
-          setFilteredData(data);
-        }
-      })
-      .catch((err) => console.error("Error fetching data:", err));
+  const fetchData = async () => {
+    try {
+      const response = await fetch("https://home-decor-backend-uh0c.onrender.com/api/contacts");
+      if (!response.ok) throw new Error("Failed to fetch data");
+      const data = await response.json();
+
+      // Check if new inquiries exist
+      if (data.length > submissions.length) {
+        setNewInquiries(true);
+        setLatestData(data);
+      } else {
+        setSubmissions(data);
+        setFilteredData(data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
   // Fetch data initially and every 5 seconds
@@ -64,7 +67,8 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Employee Dashboard</h2>
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault(); // Prevent unwanted page reload
             logout();
             navigate("/login");
           }}
@@ -79,7 +83,10 @@ export default function Dashboard() {
         <div className="mb-4 bg-blue-500 text-white p-3 rounded flex justify-between">
           <span>🔔 New Inquiry Available!</span>
           <button
-            onClick={updateWithNewInquiries}
+            onClick={(e) => {
+              e.preventDefault(); // Prevent full page reload
+              updateWithNewInquiries();
+            }}
             className="bg-white text-blue-500 px-3 py-1 rounded"
           >
             Show New Inquiry
@@ -116,7 +123,7 @@ export default function Dashboard() {
                   <td className="p-3">{submission.lastName}</td>
                   <td className="p-3">{submission.email}</td>
                   <td className="p-3">{submission.service}</td>
-                  <td className="p-3">${submission.minBudget} - ${submission.maxBudget}</td>
+                  <td className="p-3">₹{submission.minBudget} - ₹{submission.maxBudget}</td>
                   <td className="p-3">{submission.timeline}</td>
                   <td className="p-3">{submission.description}</td>
                 </tr>
