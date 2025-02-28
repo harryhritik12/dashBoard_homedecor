@@ -1,5 +1,22 @@
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Container,
+  TextField,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { AuthContext } from "../AuthContext";
 
 export default function Dashboard() {
@@ -41,8 +58,8 @@ export default function Dashboard() {
     return () => clearInterval(interval); // Cleanup interval on unmount
   }, [latestTimestamp]);
 
-  const updateWithNewInquiries = () => {
-    setNewInquiries(false);
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
   };
 
   useEffect(() => {
@@ -61,77 +78,93 @@ export default function Dashboard() {
     );
   }, [search, submissions]);
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const handleCloseSnackbar = () => {
+    setNewInquiries(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold">Employee Dashboard</h2>
-        <button
-          onClick={() => {
-            logout();
-            navigate("/login");
-          }}
-          className="bg-red-500 text-white px-4 py-2 rounded"
+    <div>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Employee Dashboard
+          </Typography>
+          <Button color="inherit" onClick={handleLogout}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
+
+      <Container sx={{ mt: 4 }}>
+        <Snackbar
+          open={newInquiries}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
         >
-          Logout
-        </button>
-      </div>
+          <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: '100%' }}>
+            New Inquiry Available!
+          </Alert>
+        </Snackbar>
 
-      {newInquiries && (
-        <div className="mb-4 bg-blue-500 text-white p-3 rounded flex justify-between">
-          <span>🔔 New Inquiry Available!</span>
-          <button
-            onClick={updateWithNewInquiries}
-            className="bg-white text-blue-500 px-3 py-1 rounded"
-          >
-            Show New Inquiry
-          </button>
-        </div>
-      )}
+        <TextField
+          label="Search by name, email, or service..."
+          variant="outlined"
+          fullWidth
+          value={search}
+          onChange={handleSearchChange}
+          sx={{ mb: 4 }}
+        />
 
-      <input
-        type="text"
-        placeholder="Search by name, email, or service..."
-        className="w-full p-2 mb-4 border border-gray-300 rounded"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      <div className="overflow-auto bg-white shadow-md rounded-lg">
-        <table className="w-full text-left">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-3">First Name</th>
-              <th className="p-3">Last Name</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Service</th>
-              <th className="p-3">Budget</th>
-              <th className="p-3">Timeline</th>
-              <th className="p-3">Description</th>
-              <th className="p-3">Submitted At</th> {/* New column for date and time */}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.length > 0 ? (
-              filteredData.map((submission, index) => (
-                <tr key={index} className="border-b">
-                  <td className="p-3">{submission.firstName}</td>
-                  <td className="p-3">{submission.lastName}</td>
-                  <td className="p-3">{submission.email}</td>
-                  <td className="p-3">{submission.service}</td>
-                  <td className="p-3">₹{submission.minBudget} - ₹{submission.maxBudget}</td>
-                  <td className="p-3">{submission.timeline}</td>
-                  <td className="p-3">{submission.description}</td>
-                  <td className="p-3">{new Date(submission.submittedAt).toLocaleString()}</td> {/* Displaying formatted date and time */}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="p-3 text-center">No data available</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+        <Paper>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>First Name</TableCell>
+                  <TableCell>Last Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Service</TableCell>
+                  <TableCell>Budget</TableCell>
+                  <TableCell>Timeline</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Submitted At</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredData.length > 0 ? (
+                  filteredData.map((submission, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{submission.firstName}</TableCell>
+                      <TableCell>{submission.lastName}</TableCell>
+                      <TableCell>{submission.email}</TableCell>
+                      <TableCell>{submission.service}</TableCell>
+                      <TableCell>
+                        ₹{submission.minBudget} - ₹{submission.maxBudget}
+                      </TableCell>
+                      <TableCell>{submission.timeline}</TableCell>
+                      <TableCell>{submission.description}</TableCell>
+                      <TableCell>
+                        {new Date(submission.submittedAt).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center">
+                      No data available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Container>
     </div>
   );
 }
