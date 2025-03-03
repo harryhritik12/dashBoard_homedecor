@@ -19,11 +19,17 @@ export default function Login() {
       body: JSON.stringify(formData),
     });
     const data = await res.json();
+
     if (res.ok) {
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
     } else {
-      alert(data.message);
+      // Handle specific error messages
+      if (data.message === "User not found") {
+        alert("User does not exist. Please sign up.");
+      } else {
+        alert(data.message);
+      }
     }
   };
 

@@ -5,34 +5,51 @@ import { Eye, EyeOff } from "lucide-react";
 export default function Signup() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (e.target.name === "email") {
-      if (!e.target.value.endsWith("@gmail.com")) {
-        setError("Only @gmail.com emails are allowed!");
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Email validation
+    if (name === "email") {
+      if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(value)) {
+        setError((prev) => ({ ...prev, email: "Only @gmail.com emails are allowed!" }));
       } else {
-        setError("");
+        setError((prev) => ({ ...prev, email: "" }));
+      }
+    }
+
+    // Password validation
+    if (name === "password") {
+      if (value.length < 6) {
+        setError((prev) => ({ ...prev, password: "Password must be at least 6 characters!" }));
+      } else {
+        setError((prev) => ({ ...prev, password: "" }));
       }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (error) return;
+    if (error.email || error.password) return;
 
+    setLoading(true);
     const res = await fetch("https://dashboard-backend-0rig.onrender.com/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
+
     const data = await res.json();
+    setLoading(false);
+
     if (res.ok) {
       navigate("/login");
     } else {
-      alert(data.message);
+      setError((prev) => ({ ...prev, email: data.message }));
     }
   };
 
@@ -45,6 +62,7 @@ export default function Signup() {
             type="text"
             name="name"
             placeholder="Full Name"
+            value={formData.name}
             onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900"
             required
@@ -54,17 +72,19 @@ export default function Signup() {
               type="email"
               name="email"
               placeholder="Email (must be @gmail.com)"
+              value={formData.email}
               onChange={handleChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900"
               required
             />
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            {error.email && <p className="text-red-500 text-sm mt-1">{error.email}</p>}
           </div>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               name="password"
-              placeholder="Password"
+              placeholder="Password (min 6 characters)"
+              value={formData.password}
               onChange={handleChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900"
               required
@@ -76,12 +96,18 @@ export default function Signup() {
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
+            {error.password && <p className="text-red-500 text-sm mt-1">{error.password}</p>}
           </div>
           <button
             type="submit"
-            className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-all duration-300"
+            disabled={!!error.email || !!error.password || loading}
+            className={`w-full py-3 rounded-lg transition-all duration-300 ${
+              loading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-gray-900 text-white hover:bg-gray-800"
+            }`}
           >
-            Sign Up
+            {loading ? "Signing Up..." : "Sign Up"}
           </button>
         </form>
         <p className="text-center text-gray-600">
