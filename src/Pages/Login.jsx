@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { AuthContext } from "./AuthContext";
 import axios from "axios";
 
 export default function Login() {
+  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -16,7 +16,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const res = await axios.post("https://dashboard-backend-0rig.onrender.com/api/auth/login", formData);
-      localStorage.setItem("token", res.data.token);
+      login(res.data.token);  
       navigate("/dashboard");
     } catch (error) {
       alert(error.response?.data?.message || "Login failed. Please try again.");
