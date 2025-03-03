@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import axios from "axios";
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -13,23 +14,12 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("https://dashboard-backend-0rig.onrender.com/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem("token", data.token);
+    try {
+      const res = await axios.post("https://dashboard-backend-0rig.onrender.com/api/auth/login", formData);
+      localStorage.setItem("token", res.data.token);
       navigate("/dashboard");
-    } else {
-      // Handle specific error messages
-      if (data.message === "User not found") {
-        alert("User does not exist. Please sign up.");
-      } else {
-        alert(data.message);
-      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Login failed. Please try again.");
     }
   };
 

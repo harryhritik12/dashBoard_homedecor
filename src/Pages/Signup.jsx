@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import axios from "axios";
 
 export default function Signup() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -13,7 +14,6 @@ export default function Signup() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // Email validation
     if (name === "email") {
       if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(value)) {
         setError((prev) => ({ ...prev, email: "Only @gmail.com emails are allowed!" }));
@@ -22,7 +22,6 @@ export default function Signup() {
       }
     }
 
-    // Password validation
     if (name === "password") {
       if (value.length < 6) {
         setError((prev) => ({ ...prev, password: "Password must be at least 6 characters!" }));
@@ -37,19 +36,13 @@ export default function Signup() {
     if (error.email || error.password) return;
 
     setLoading(true);
-    const res = await fetch("https://dashboard-backend-0rig.onrender.com/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    const data = await res.json();
-    setLoading(false);
-
-    if (res.ok) {
+    try {
+      await axios.post("https://dashboard-backend-0rig.onrender.com/api/auth/signup", formData);
       navigate("/login");
-    } else {
-      setError((prev) => ({ ...prev, email: data.message }));
+    } catch (err) {
+      setError((prev) => ({ ...prev, email: err.response?.data?.message || "Signup failed" }));
+    } finally {
+      setLoading(false);
     }
   };
 
