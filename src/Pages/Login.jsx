@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
@@ -8,14 +8,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 Check if user is already logged in and redirect
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/dashboard");
-    }
-  }, [navigate]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -23,17 +15,9 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // 🔹 Ensure old token is removed before logging in
-      localStorage.removeItem("token");
-
-      const res = await axios.post(
-        "https://dashboard-backend-0rig.onrender.com/api/auth/login",
-        formData
-      );
-
-      localStorage.setItem("token", res.data.token); // Save new token
-      axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`; // Update headers
-      navigate("/dashboard"); // Redirect to dashboard
+      const res = await axios.post("https://dashboard-backend-0rig.onrender.com/api/auth/login", formData);
+      localStorage.setItem("token", res.data.token);
+      navigate("/dashboard");
     } catch (error) {
       alert(error.response?.data?.message || "Login failed. Please try again.");
     }
@@ -61,11 +45,7 @@ export default function Login() {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800"
               required
             />
-            <button
-              type="button"
-              className="absolute right-3 top-3 text-gray-600"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <button type="button" className="absolute right-3 top-3 text-gray-600" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
