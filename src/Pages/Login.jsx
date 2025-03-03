@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "../AuthContext";
 import axios from "axios";
 
 export default function Login() {
